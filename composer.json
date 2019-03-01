@@ -1,0 +1,30 @@
+{
+  "name": "george-t/electronic-contract-fdd",
+  "description": "Electronic contract SDK with FaDaDa",
+  "keywords": [
+    "george-t",
+    "electronic-contract-fdd",
+    "FaDaDa",
+    "FDD"
+  ],
+  "authors": [
+    {
+      "name": "george-t",
+      "email": "jobsteng@163.com"
+    }
+  ],
+  "license": "MIT",
+  "require": {
+    "php": ">=7.0",
+    "ext-simplexml": "*",
+    "ext-libxml": "*",
+    "guzzlehttp/guzzle": "^6.3",
+    "guzzlehttp/promises": "^1.3",
+    "guzzlehttp/psr7": "^1.4"
+  },
+  "autoload": {
+    "psr-4": {
+      "georgeT\\ElectronicContractFdd\\": "src/"
+    }
+  }
+}
