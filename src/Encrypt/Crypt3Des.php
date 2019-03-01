@@ -20,7 +20,7 @@ class Crypt3Des
     const CIPHER = 'des-ede3';
 
     /**
-     * @param string $data 待加密的明文信息数据。
+     * @param string $data
      * @param string $key
      * @return array
      */

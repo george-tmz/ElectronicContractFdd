@@ -10,30 +10,14 @@ namespace georgeT\ElectronicContractFdd\Traits;
 
 
 use georgeT\ElectronicContractFdd\Client\Client;
+use georgeT\ElectronicContractFdd\Request\RpcRequest;
 
 /**
  * Class RequestTrait
  * @package georgeT\ElectronicContractFdd\Traits
  */
-class RequestTrait
+trait RequestTrait
 {
-    /**
-     * @param $name
-     * @param $value
-     */
-    /*public static function appendUserAgent($name, $value)
-    {
-        UserAgent::append($name, $value);
-    }*/
-
-    /**
-     * @param array $userAgent
-     */
-    /*public static function withUserAgent(array $userAgent)
-    {
-        UserAgent::with($userAgent);
-    }*/
-
     /**
      * @param Client $client
      * @param array  $options
