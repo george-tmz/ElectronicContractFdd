@@ -8,8 +8,6 @@
 
 namespace georgeT\ElectronicContractFdd\Traits;
 
-
-use georgeT\ElectronicContractFdd\Client\Client;
 use georgeT\ElectronicContractFdd\Request\RpcRequest;
 
 /**
@@ -19,12 +17,11 @@ use georgeT\ElectronicContractFdd\Request\RpcRequest;
 trait RequestTrait
 {
     /**
-     * @param Client $client
-     * @param array  $options
+     * @param array $options
      * @return RpcRequest
      */
-    public static function rpcRequest(Client $client, array $options = [])
+    public static function rpcRequest(array $options = [])
     {
-        return new RpcRequest($client, $options);
+        return new RpcRequest($options);
     }
 }

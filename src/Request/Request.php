@@ -67,12 +67,11 @@ abstract class Request
 
     /**
      * Request constructor.
-     * @param \georgeT\ElectronicContractFdd\Client\Client $client
-     * @param array                                        $options
+     * @param array $options
      */
-    public function __construct(\georgeT\ElectronicContractFdd\Client\Client $client, array $options = [])
+    public function __construct(array $options = [])
     {
-        $this->client                 = $client;
+        //$this->client                 = $client;
         $this->uri                    = new Uri();
         $this->uri                    = $this->uri->withScheme($this->scheme);
         $this->guzzle                 = new Client();
@@ -214,6 +213,7 @@ abstract class Request
                 self::getPostHttpBody($this->options['form_params'])
             );
         }
+        var_dump($this);die;
         $result = new Result($this->response(), $this);
 
         if (!$result->isSuccess()) {

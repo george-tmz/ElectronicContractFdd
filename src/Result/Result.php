@@ -75,6 +75,7 @@ class Result
      */
     public function isSuccess()
     {
+        var_dump($this->response);die;
         return 200 <= $this->response->getStatusCode()
             && 300 > $this->response->getStatusCode();
     }

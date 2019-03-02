@@ -13,7 +13,6 @@ use georgeT\ElectronicContractFdd\Traits\RequestTrait;
 class FddServer
 {
     use RequestTrait;
-
     /**
      * @param $data
      * @param $key
