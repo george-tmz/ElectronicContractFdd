@@ -30,8 +30,10 @@ class RpcRequest extends Request
                     $this->jsonBody($this->options['query']);
                     break;
                 default:
-                    foreach ($this->options['query'] as $apiParamKey => $apiParamValue) {
-                        $this->options['form_params'][$apiParamKey] = $apiParamValue;
+                    if (!isset($this->options['multipart'])) {
+                        foreach ($this->options['query'] as $apiParamKey => $apiParamValue) {
+                            $this->options['form_params'][$apiParamKey] = $apiParamValue;
+                        }
                     }
             }
             unset($this->options['query']);
