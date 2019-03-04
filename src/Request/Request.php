@@ -213,7 +213,7 @@ abstract class Request
                 self::getPostHttpBody($this->options['form_params'])
             );
         }
-        var_dump($this);die;
+        //var_dump($this);die;
         $result = new Result($this->response(), $this);
 
         if (!$result->isSuccess()) {
