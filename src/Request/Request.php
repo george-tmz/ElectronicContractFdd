@@ -200,7 +200,7 @@ abstract class Request
     }
 
     /**
-     * @return Result
+     * @return \GuzzleHttp\Psr7\Response
      * @throws ClientException
      * @throws ServerException
      */
@@ -213,14 +213,13 @@ abstract class Request
                 self::getPostHttpBody($this->options['form_params'])
             );
         }
-        //var_dump($this);die;
         $result = new Result($this->response(), $this);
 
         if (!$result->isSuccess()) {
             throw new ServerException($result);
         }
 
-        return $result;
+        return $result->getResponse();
     }
 
     /**

@@ -29,14 +29,19 @@ class Result
     protected $request;
 
     /**
+     * @var int
+     */
+    protected $statusCode;
+
+    /**
      * Result constructor.
      * @param Response $response
      * @param Request  $request
      */
     public function __construct(Response $response, Request $request = NULL)
     {
-        $format = ($request instanceof Request) ? \strtoupper($request->outputFormat) : 'XML';
-
+        $this->statusCode = $response->getStatusCode();
+        $format           = ($request instanceof Request) ? \strtoupper($request->outputFormat) : 'XML';
         switch ($format) {
             case 'JSON':
                 $response = self::jsonToArray($response->getBody()->getContents());
@@ -75,9 +80,7 @@ class Result
      */
     public function isSuccess()
     {
-        var_dump($this->response);die;
-        return 200 <= $this->response->getStatusCode()
-            && 300 > $this->response->getStatusCode();
+        return 200 <= $this->statusCode && 300 > $this->statusCode;
     }
 
     /**
