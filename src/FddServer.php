@@ -146,12 +146,16 @@ class FddServer
     /**
      * 实名认证
      * @param string $customerName
-     * @param string $encryptResult
+     * @param string $idCard
      * @return array
      */
-    public static function checkIdCard(string $customerName, string $encryptResult)
+    public static function checkIdCard(string $customerName, string $idCard)
     {
         try {
+            list($bool, $encryptResult) = Crypt3Des::encrypt($idCard, self::$appSecret);
+            if (!$bool) {
+                throw new \Exception('数据加密失败！');
+            }
             $timestamp  = date("YmdHis");
             $msg_digest = base64_encode(strtoupper(sha1(self::$appId . strtoupper(md5($timestamp)) . strtoupper(sha1(self::$appSecret)))));
 
@@ -180,13 +184,18 @@ class FddServer
     /**
      * 获取个人CA证书
      * @param string $customerName
-     * @param string $encryptResult
+     * @param string $idCard
+     * @param string $mobile
      * @param string $email
      * @return array
      */
-    public static function applyPersonalCa(string $customerName, string $encryptResult, string $email): array
+    public static function applyPersonalCa(string $customerName, string $idCard, string $mobile, string $email): array
     {
         try {
+            list($bool, $encryptResult) = Crypt3Des::encrypt($idCard . '|' . $mobile, self::$appSecret);
+            if (!$bool) {
+                throw new \Exception('数据加密失败！');
+            }
             $timestamp  = date("YmdHis");
             $msg_digest =
                 base64_encode(
