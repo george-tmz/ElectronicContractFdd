@@ -320,6 +320,7 @@ class FddServer
      * @param string $docTitle
      * @param string $signKeyword
      * @param string $returnUrl
+     * @param string $notifyUrl
      * @param string $pushType
      * @param string $limitType
      * @param string $validity
@@ -331,6 +332,7 @@ class FddServer
                                         string $docTitle,
                                         string $signKeyword,
                                         string $returnUrl,
+                                        string $notifyUrl,
                                         string $pushType = '1',
                                         string $limitType = '1',
                                         string $validity = '10080'): array
@@ -364,6 +366,7 @@ class FddServer
                         'limit_type'     => $limitType,
                         'validity'       => $validity,
                         'return_url'     => $returnUrl,
+                        'notify_url'     => $notifyUrl,
                         'msg_digest'     => $msg_digest
                     ]
                 ])->request();
