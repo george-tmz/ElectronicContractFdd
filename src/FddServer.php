@@ -34,6 +34,8 @@ class FddServer
 
     public static $request;
 
+    public static $timestamp;
+
     /**
      * FddServer constructor.
      * @param string $appId
@@ -42,6 +44,7 @@ class FddServer
      */
     public function __construct(string $appId, string $appSecret, array $options = [])
     {
+        self::$timestamp = date("YmdHis");
         self::$appId     = $appId;
         self::$appSecret = $appSecret;
         self::$request   = new RpcRequest($options);
@@ -94,12 +97,11 @@ class FddServer
     {
         $appId      = self::$appId;
         $appSecret  = self::$appSecret;
-        $timestamp  = date("YmdHis");
         $msg_digest =
             base64_encode(
                 strtoupper(
                     sha1($appId .
-                        strtoupper(md5($timestamp)) .
+                        strtoupper(md5(self::$timestamp)) .
                         strtoupper(sha1($appSecret . $templateId))
                     )));
         try {
@@ -121,7 +123,7 @@ class FddServer
                         ],
                         [
                             'name'     => 'timestamp',
-                            'contents' => $timestamp
+                            'contents' => self::$timestamp
                         ],
                         [
                             'name'     => 'template_id',
@@ -156,8 +158,7 @@ class FddServer
             if (!$bool) {
                 throw new \Exception('数据加密失败！');
             }
-            $timestamp  = date("YmdHis");
-            $msg_digest = base64_encode(strtoupper(sha1(self::$appId . strtoupper(md5($timestamp)) . strtoupper(sha1(self::$appSecret)))));
+            $msg_digest = base64_encode(strtoupper(sha1(self::$appId . strtoupper(md5(self::$timestamp)) . strtoupper(sha1(self::$appSecret)))));
 
             $response = self::$request->scheme('https')
                 ->host(Config::HOST)
@@ -169,7 +170,7 @@ class FddServer
                     'query' => [
                         "app_id"     => self::$appId,
                         "v"          => Config::VERSION,
-                        "timestamp"  => $timestamp,
+                        "timestamp"  => self::$timestamp,
                         "idCard"     => $encryptResult,
                         "name"       => $customerName,
                         "msg_digest" => $msg_digest
@@ -196,12 +197,11 @@ class FddServer
             if (!$bool) {
                 throw new \Exception('数据加密失败！');
             }
-            $timestamp  = date("YmdHis");
             $msg_digest =
                 base64_encode(
                     strtoupper(
                         sha1(self::$appId .
-                            strtoupper(md5($timestamp)) .
+                            strtoupper(md5(self::$timestamp)) .
                             strtoupper(sha1(self::$appSecret))
                         )));;
 
@@ -215,7 +215,7 @@ class FddServer
                     'query' => [
                         "app_id"        => self::$appId,
                         "v"             => Config::VERSION,
-                        "timestamp"     => $timestamp,
+                        "timestamp"     => self::$timestamp,
                         "customer_name" => $customerName,
                         "email"         => $email,
                         "ident_type"    => '0',
@@ -246,13 +246,12 @@ class FddServer
                                          string $fontSize = "12",
                                          string $fontType = "0"): array
     {
-        $timestamp    = date("YmdHis");
         $parameterMap = json_encode($parameterMap);
         $msg_digest   =
             base64_encode(
                 strtoupper(
                     sha1(self::$appId .
-                        strtoupper(md5($timestamp)) .
+                        strtoupper(md5(self::$timestamp)) .
                         strtoupper(sha1(self::$appSecret . $templateId . $contractId)) . $parameterMap
                     )));;
         try {
@@ -274,7 +273,7 @@ class FddServer
                         ],
                         [
                             'name'     => 'timestamp',
-                            'contents' => $timestamp
+                            'contents' => self::$timestamp
                         ],
                         [
                             'name'     => 'doc_title',
@@ -337,12 +336,11 @@ class FddServer
                                         string $limitType = '1',
                                         string $validity = '10080'): array
     {
-        $timestamp  = date("YmdHis");
         $msg_digest =
             base64_encode(
                 strtoupper(
                     sha1(self::$appId .
-                        strtoupper(md5($timestamp)) .
+                        strtoupper(md5(self::$timestamp)) .
                         strtoupper(sha1(self::$appSecret . $contractId . $transactionId . $pushType . $customerId . $signKeyword))
                     )));;
         try {
@@ -355,7 +353,7 @@ class FddServer
                 ->options([
                     'query' => [
                         "app_id"         => self::$appId,
-                        "timestamp"      => $timestamp,
+                        "timestamp"      => self::$timestamp,
                         "v"              => Config::VERSION,
                         'push_type'      => $pushType,
                         'transaction_id' => $transactionId,
@@ -368,6 +366,140 @@ class FddServer
                         'return_url'     => $returnUrl,
                         'notify_url'     => $notifyUrl,
                         'msg_digest'     => $msg_digest
+                    ]
+                ])->request();
+            return [TRUE, $response];
+        } catch (\Exception $e) {
+            return [FALSE, $e->getMessage()];
+        }
+    }
+
+    /**
+     * 自动签署
+     * @param string $transactionId
+     * @param string $contractId
+     * @param string $customerId
+     * @param string $docTitle
+     * @param string $signKeyword
+     * @param string $notifyUrl
+     * @param string $keywordStrategy
+     * @param string $positionType
+     * @param string $clientRole
+     * @return array
+     */
+    public static function extSignAuto(string $transactionId,
+                                       string $contractId,
+                                       string $customerId,
+                                       string $docTitle,
+                                       string $signKeyword,
+                                       string $notifyUrl,
+                                       string $keywordStrategy = "0",
+                                       string $positionType = "0",
+                                       string $clientRole = "1"): array
+    {
+        $msg_digest =
+            base64_encode(
+                strtoupper(
+                    sha1(self::$appId .
+                        strtoupper(md5($transactionId . self::$timestamp)) .
+                        strtoupper(sha1(self::$appSecret . $customerId))
+                    )));
+        try {
+            $response = self::$request->scheme('https')
+                ->host(Config::HOST)
+                ->path('/api/extsign_auto.api')
+                ->method('POST')
+                ->inputFormat('array')
+                ->outputFormat('json')
+                ->options([
+                    'query' => [
+                        "app_id"           => self::$appId,
+                        "timestamp"        => self::$timestamp,
+                        "v"                => Config::VERSION,
+                        'transaction_id'   => $transactionId,
+                        'contract_id'      => $contractId,
+                        'customer_id'      => $customerId,
+                        'doc_title'        => $docTitle,
+                        'position_type'    => $positionType,
+                        'sign_keyword'     => $signKeyword,
+                        'keyword_strategy' => $keywordStrategy,
+                        'client_role'      => $clientRole,
+                        'notify_url'       => $notifyUrl,
+                        'msg_digest'       => $msg_digest
+                    ]
+                ])->request();
+            return [TRUE, $response];
+        } catch (\Exception $e) {
+            return [FALSE, $e->getMessage()];
+        }
+    }
+
+    /**
+     * 合同归档
+     * @param string $contractId
+     * @return array
+     */
+    public static function contractFiling(string $contractId)
+    {
+        $msg_digest =
+            base64_encode(
+                strtoupper(
+                    sha1(self::$appId .
+                        strtoupper(md5(self::$timestamp)) .
+                        strtoupper(sha1(self::$appSecret . $contractId))
+                    )));
+        try {
+            $response = self::$request->scheme('https')
+                ->host(Config::HOST)
+                ->path('/api/extsign_auto.api')
+                ->method('POST')
+                ->inputFormat('array')
+                ->outputFormat('json')
+                ->options([
+                    'query' => [
+                        "app_id"      => self::$appId,
+                        "timestamp"   => self::$timestamp,
+                        "v"           => Config::VERSION,
+                        'contract_id' => $contractId,
+                        'msg_digest'  => $msg_digest
+                    ]
+                ])->request();
+            return [TRUE, $response];
+        } catch (\Exception $e) {
+            return [FALSE, $e->getMessage()];
+        }
+    }
+
+    /**
+     * 客户签署状态查询
+     * @param string $contractId
+     * @param string $customerId
+     * @return array
+     */
+    public static function querySignStatus(string $contractId, string $customerId)
+    {
+        $msg_digest =
+            base64_encode(
+                strtoupper(
+                    sha1(self::$appId .
+                        strtoupper(md5(self::$timestamp)) .
+                        strtoupper(sha1(self::$appSecret . $contractId . $customerId))
+                    )));
+        try {
+            $response = self::$request->scheme('https')
+                ->host(Config::HOST)
+                ->path('/api/extsign_auto.api')
+                ->method('POST')
+                ->inputFormat('array')
+                ->outputFormat('json')
+                ->options([
+                    'query' => [
+                        "app_id"      => self::$appId,
+                        "timestamp"   => self::$timestamp,
+                        "v"           => Config::VERSION,
+                        'contract_id' => $contractId,
+                        'customer_id' => $customerId,
+                        'msg_digest'  => $msg_digest
                     ]
                 ])->request();
             return [TRUE, $response];
