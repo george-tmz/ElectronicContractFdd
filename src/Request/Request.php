@@ -13,13 +13,20 @@ use georgeT\ElectronicContractFdd\Http\GuzzleTrait;
 use georgeT\ElectronicContractFdd\Result\Result;
 use GuzzleHttp\Client;
 use georgeT\ElectronicContractFdd\Exception\ClientException;
+use function GuzzleHttp\Psr7\parse_query;
+use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Psr7\Uri;
 use GuzzleHttp\Exception\GuzzleException;
+use function is_array;
+use function is_object;
+use function json_encode;
+use Psr\Http\Message\ResponseInterface;
+use function strtolower;
+use function strtoupper;
 
 /**
  * Class Request
  * @package georgeT\ElectronicContractFdd\Request
- * @method string resolveParameters()
  */
 abstract class Request
 {
@@ -89,7 +96,7 @@ abstract class Request
      */
     public function inputFormat(string $format)
     {
-        $this->inputFormat = \strtoupper($format);
+        $this->inputFormat = strtoupper($format);
 
         return $this;
     }
@@ -101,7 +108,7 @@ abstract class Request
      */
     public function outputFormat(string $format)
     {
-        $this->outputFormat = \strtoupper($format);
+        $this->outputFormat = strtoupper($format);
 
         return $this;
     }
@@ -125,8 +132,8 @@ abstract class Request
      */
     public function jsonBody($content)
     {
-        if (\is_array($content) || \is_object($content)) {
-            $content = \json_encode($content);
+        if (is_array($content) || is_object($content)) {
+            $content = json_encode($content);
         }
 
         return $this->body($content);
@@ -139,7 +146,7 @@ abstract class Request
      */
     public function scheme(string $scheme)
     {
-        $this->scheme = \strtolower($scheme);
+        $this->scheme = strtolower($scheme);
         $this->uri    = $this->uri->withScheme($this->scheme);
 
         return $this;
@@ -174,7 +181,7 @@ abstract class Request
      */
     public function method($method)
     {
-        $this->method = \strtoupper($method);
+        $this->method = strtoupper($method);
 
         return $this;
     }
@@ -200,16 +207,16 @@ abstract class Request
     }
 
     /**
-     * @return \GuzzleHttp\Psr7\Response
+     * @return Response
      * @throws ClientException
      * @throws ServerException
+     * @annotation
      */
     public function request()
     {
-        $this->resolveParameters();
-
+//        echo $this->uri;die;
         if (isset($this->options['form_params'])) {
-            $this->options['form_params'] = \GuzzleHttp\Psr7\parse_query(
+            $this->options['form_params'] = parse_query(
                 self::getPostHttpBody($this->options['form_params'])
             );
         }
@@ -218,7 +225,6 @@ abstract class Request
         if (!$result->isSuccess()) {
             throw new ServerException($result);
         }
-
         return $result->getResponse();
     }
 
@@ -237,7 +243,7 @@ abstract class Request
     }
 
     /**
-     * @return mixed|\Psr\Http\Message\ResponseInterface
+     * @return mixed|ResponseInterface
      * @throws ClientException
      */
     private function response()

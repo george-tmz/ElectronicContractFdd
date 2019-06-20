@@ -7,11 +7,13 @@
  */
 namespace georgeT\ElectronicContractFdd\Exception;
 
+use Exception;
+
 /**
  * Class FddException
  * @package georgeT\ElectronicContractFdd\Exception
  */
-class FddException extends \Exception
+class FddException extends Exception
 {
     /**
      * @var string

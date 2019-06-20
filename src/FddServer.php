@@ -8,8 +8,11 @@
 
 namespace georgeT\ElectronicContractFdd;
 
+use Exception;
 use georgeT\ElectronicContractFdd\Config\Config;
 use georgeT\ElectronicContractFdd\Encrypt\Crypt3Des;
+use georgeT\ElectronicContractFdd\Exception\ClientException;
+use georgeT\ElectronicContractFdd\Exception\ServerException;
 use georgeT\ElectronicContractFdd\Request\RpcRequest;
 
 /**
@@ -88,6 +91,67 @@ class FddServer
     }
 
     /**
+     * @param array $param
+     * @return string
+     * @throws Exception
+     * @annotation
+     */
+    public static function buildMsgDigest(array $param)
+    {
+        if (empty($param)) {
+            throw new Exception('无业务参数');
+        }
+        ksort($param);
+        $strParam = implode('', $param);
+        return base64_encode(
+            strtoupper(sha1(
+                           self::$appId .
+                           strtoupper(md5(self::$timestamp)) .
+                           strtoupper(sha1(self::$appSecret . $strParam))
+                       )));
+    }
+
+    /**
+     * @param string $openId
+     * @param string $accountType
+     * @return array
+     * @annotation
+     */
+    public static function createAccount(string $openId, string $accountType = '1')
+    {
+        $msg_digest =
+            base64_encode(
+                strtoupper(sha1(
+                               self::$appId .
+                               strtoupper(md5(self::$timestamp)) .
+                               strtoupper(sha1(self::$appSecret . $accountType . $openId))
+                           )));
+        try {
+            $result = self::$request->scheme('https')
+                ->host(Config::HOST)
+                ->path('/api/account_register.api')
+                ->method('POST')
+                ->inputFormat('array')
+                ->outputFormat('json')
+                ->options([
+                              'query' => [
+                                  "app_id"       => self::$appId,
+                                  "timestamp"    => self::$timestamp,
+                                  "v"            => Config::VERSION,
+                                  "msg_digest"   => $msg_digest,
+                                  "account_type" => $accountType,
+                                  "open_id"      => $openId
+                              ]
+                          ])->request();
+            return [TRUE, $result];
+        } catch (ServerException $exception) {
+            return [FALSE, $exception->getMessage()];
+        } catch (ClientException $exception) {
+            return [FALSE, $exception->getMessage()];
+        }
+    }
+
+    /**
      * 模板上传
      * @param string $filePath
      * @param string $templateId
@@ -101,8 +165,8 @@ class FddServer
             base64_encode(
                 strtoupper(
                     sha1($appId .
-                        strtoupper(md5(self::$timestamp)) .
-                        strtoupper(sha1($appSecret . $templateId))
+                         strtoupper(md5(self::$timestamp)) .
+                         strtoupper(sha1($appSecret . $templateId))
                     )));
         try {
             $result = self::$request->scheme('https')
@@ -112,35 +176,35 @@ class FddServer
                 ->inputFormat('array')
                 ->outputFormat('json')
                 ->options([
-                    'multipart' => [
-                        [
-                            'name'     => 'app_id',
-                            'contents' => $appId
-                        ],
-                        [
-                            'name'     => 'v',
-                            'contents' => Config::VERSION
-                        ],
-                        [
-                            'name'     => 'timestamp',
-                            'contents' => self::$timestamp
-                        ],
-                        [
-                            'name'     => 'template_id',
-                            'contents' => $templateId
-                        ],
-                        [
-                            'name'     => 'file',
-                            'contents' => fopen($filePath, 'r'),
-                        ],
-                        [
-                            'name'     => 'msg_digest',
-                            'contents' => $msg_digest
-                        ]
-                    ]
-                ])->request();
+                              'multipart' => [
+                                  [
+                                      'name'     => 'app_id',
+                                      'contents' => $appId
+                                  ],
+                                  [
+                                      'name'     => 'v',
+                                      'contents' => Config::VERSION
+                                  ],
+                                  [
+                                      'name'     => 'timestamp',
+                                      'contents' => self::$timestamp
+                                  ],
+                                  [
+                                      'name'     => 'template_id',
+                                      'contents' => $templateId
+                                  ],
+                                  [
+                                      'name'     => 'file',
+                                      'contents' => fopen($filePath, 'r'),
+                                  ],
+                                  [
+                                      'name'     => 'msg_digest',
+                                      'contents' => $msg_digest
+                                  ]
+                              ]
+                          ])->request();
             return [TRUE, $result];
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return [FALSE, $e->getMessage()];
         }
     }
@@ -156,7 +220,7 @@ class FddServer
         try {
             list($bool, $encryptResult) = Crypt3Des::encrypt($idCard, self::$appSecret);
             if (!$bool) {
-                throw new \Exception('数据加密失败！');
+                throw new Exception('数据加密失败！');
             }
             $msg_digest = base64_encode(strtoupper(sha1(self::$appId . strtoupper(md5(self::$timestamp)) . strtoupper(sha1(self::$appSecret)))));
 
@@ -167,17 +231,17 @@ class FddServer
                 ->inputFormat('array')
                 ->outputFormat('json')
                 ->options([
-                    'query' => [
-                        "app_id"     => self::$appId,
-                        "v"          => Config::VERSION,
-                        "timestamp"  => self::$timestamp,
-                        "idCard"     => $encryptResult,
-                        "name"       => $customerName,
-                        "msg_digest" => $msg_digest
-                    ]
-                ])->request();
+                              'query' => [
+                                  "app_id"     => self::$appId,
+                                  "v"          => Config::VERSION,
+                                  "timestamp"  => self::$timestamp,
+                                  "idCard"     => $encryptResult,
+                                  "name"       => $customerName,
+                                  "msg_digest" => $msg_digest
+                              ]
+                          ])->request();
             return [TRUE, $response];
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return [FALSE, $e->getMessage()];
         }
     }
@@ -195,14 +259,14 @@ class FddServer
         try {
             list($bool, $encryptResult) = Crypt3Des::encrypt($idCard . '|' . $mobile, self::$appSecret);
             if (!$bool) {
-                throw new \Exception('数据加密失败！');
+                throw new Exception('数据加密失败！');
             }
             $msg_digest =
                 base64_encode(
                     strtoupper(
                         sha1(self::$appId .
-                            strtoupper(md5(self::$timestamp)) .
-                            strtoupper(sha1(self::$appSecret))
+                             strtoupper(md5(self::$timestamp)) .
+                             strtoupper(sha1(self::$appSecret))
                         )));;
 
             $response = self::$request->scheme('https')
@@ -212,19 +276,19 @@ class FddServer
                 ->inputFormat('array')
                 ->outputFormat('json')
                 ->options([
-                    'query' => [
-                        "app_id"        => self::$appId,
-                        "v"             => Config::VERSION,
-                        "timestamp"     => self::$timestamp,
-                        "customer_name" => $customerName,
-                        "email"         => $email,
-                        "ident_type"    => '0',
-                        "id_mobile"     => $encryptResult,
-                        "msg_digest"    => $msg_digest
-                    ]
-                ])->request();
+                              'query' => [
+                                  "app_id"        => self::$appId,
+                                  "v"             => Config::VERSION,
+                                  "timestamp"     => self::$timestamp,
+                                  "customer_name" => $customerName,
+                                  "email"         => $email,
+                                  "ident_type"    => '0',
+                                  "id_mobile"     => $encryptResult,
+                                  "msg_digest"    => $msg_digest
+                              ]
+                          ])->request();
             return [TRUE, $response];
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return [FALSE, $e->getMessage()];
         }
     }
@@ -251,8 +315,8 @@ class FddServer
             base64_encode(
                 strtoupper(
                     sha1(self::$appId .
-                        strtoupper(md5(self::$timestamp)) .
-                        strtoupper(sha1(self::$appSecret . $templateId . $contractId)) . $parameterMap
+                         strtoupper(md5(self::$timestamp)) .
+                         strtoupper(sha1(self::$appSecret . $templateId . $contractId)) . $parameterMap
                     )));;
         try {
             $response = self::$request->scheme('https')
@@ -262,51 +326,51 @@ class FddServer
                 ->inputFormat('array')
                 ->outputFormat('json')
                 ->options([
-                    'multipart' => [
-                        [
-                            'name'     => 'app_id',
-                            'contents' => self::$appId
-                        ],
-                        [
-                            'name'     => 'v',
-                            'contents' => Config::VERSION
-                        ],
-                        [
-                            'name'     => 'timestamp',
-                            'contents' => self::$timestamp
-                        ],
-                        [
-                            'name'     => 'doc_title',
-                            'contents' => $docTitle
-                        ],
-                        [
-                            'name'     => 'template_id',
-                            'contents' => $templateId
-                        ],
-                        [
-                            'name'     => 'contract_id',
-                            'contents' => $contractId
-                        ],
-                        [
-                            'name'     => 'font_size',
-                            'contents' => $fontSize
-                        ],
-                        [
-                            'name'     => 'font_type',
-                            'contents' => $fontType
-                        ],
-                        [
-                            'name'     => 'parameter_map',
-                            'contents' => $parameterMap,
-                        ],
-                        [
-                            'name'     => 'msg_digest',
-                            'contents' => $msg_digest
-                        ]
-                    ]
-                ])->request();
+                              'multipart' => [
+                                  [
+                                      'name'     => 'app_id',
+                                      'contents' => self::$appId
+                                  ],
+                                  [
+                                      'name'     => 'v',
+                                      'contents' => Config::VERSION
+                                  ],
+                                  [
+                                      'name'     => 'timestamp',
+                                      'contents' => self::$timestamp
+                                  ],
+                                  [
+                                      'name'     => 'doc_title',
+                                      'contents' => $docTitle
+                                  ],
+                                  [
+                                      'name'     => 'template_id',
+                                      'contents' => $templateId
+                                  ],
+                                  [
+                                      'name'     => 'contract_id',
+                                      'contents' => $contractId
+                                  ],
+                                  [
+                                      'name'     => 'font_size',
+                                      'contents' => $fontSize
+                                  ],
+                                  [
+                                      'name'     => 'font_type',
+                                      'contents' => $fontType
+                                  ],
+                                  [
+                                      'name'     => 'parameter_map',
+                                      'contents' => $parameterMap,
+                                  ],
+                                  [
+                                      'name'     => 'msg_digest',
+                                      'contents' => $msg_digest
+                                  ]
+                              ]
+                          ])->request();
             return [TRUE, $response];
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return [FALSE, $e->getMessage()];
         }
     }
@@ -340,8 +404,8 @@ class FddServer
             base64_encode(
                 strtoupper(
                     sha1(self::$appId .
-                        strtoupper(md5(self::$timestamp)) .
-                        strtoupper(sha1(self::$appSecret . $contractId . $transactionId . $pushType . $customerId . $signKeyword))
+                         strtoupper(md5(self::$timestamp)) .
+                         strtoupper(sha1(self::$appSecret . $contractId . $transactionId . $pushType . $customerId . $signKeyword))
                     )));;
         try {
             $response = self::$request->scheme('https')
@@ -351,25 +415,25 @@ class FddServer
                 ->inputFormat('array')
                 ->outputFormat('json')
                 ->options([
-                    'query' => [
-                        "app_id"         => self::$appId,
-                        "timestamp"      => self::$timestamp,
-                        "v"              => Config::VERSION,
-                        'push_type'      => $pushType,
-                        'transaction_id' => $transactionId,
-                        'contract_id'    => $contractId,
-                        'customer_id'    => $customerId,
-                        'doc_title'      => $docTitle,
-                        'sign_keyword'   => $signKeyword,
-                        'limit_type'     => $limitType,
-                        'validity'       => $validity,
-                        'return_url'     => $returnUrl,
-                        'notify_url'     => $notifyUrl,
-                        'msg_digest'     => $msg_digest
-                    ]
-                ])->request();
+                              'query' => [
+                                  "app_id"         => self::$appId,
+                                  "timestamp"      => self::$timestamp,
+                                  "v"              => Config::VERSION,
+                                  'push_type'      => $pushType,
+                                  'transaction_id' => $transactionId,
+                                  'contract_id'    => $contractId,
+                                  'customer_id'    => $customerId,
+                                  'doc_title'      => $docTitle,
+                                  'sign_keyword'   => $signKeyword,
+                                  'limit_type'     => $limitType,
+                                  'validity'       => $validity,
+                                  'return_url'     => $returnUrl,
+                                  'notify_url'     => $notifyUrl,
+                                  'msg_digest'     => $msg_digest
+                              ]
+                          ])->request();
             return [TRUE, $response];
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return [FALSE, $e->getMessage()];
         }
     }
@@ -401,8 +465,8 @@ class FddServer
             base64_encode(
                 strtoupper(
                     sha1(self::$appId .
-                        strtoupper(md5($transactionId . self::$timestamp)) .
-                        strtoupper(sha1(self::$appSecret . $customerId))
+                         strtoupper(md5($transactionId . self::$timestamp)) .
+                         strtoupper(sha1(self::$appSecret . $customerId))
                     )));
         try {
             $response = self::$request->scheme('https')
@@ -412,24 +476,24 @@ class FddServer
                 ->inputFormat('array')
                 ->outputFormat('json')
                 ->options([
-                    'query' => [
-                        "app_id"           => self::$appId,
-                        "timestamp"        => self::$timestamp,
-                        "v"                => Config::VERSION,
-                        'transaction_id'   => $transactionId,
-                        'contract_id'      => $contractId,
-                        'customer_id'      => $customerId,
-                        'doc_title'        => $docTitle,
-                        'position_type'    => $positionType,
-                        'sign_keyword'     => $signKeyword,
-                        'keyword_strategy' => $keywordStrategy,
-                        'client_role'      => $clientRole,
-                        'notify_url'       => $notifyUrl,
-                        'msg_digest'       => $msg_digest
-                    ]
-                ])->request();
+                              'query' => [
+                                  "app_id"           => self::$appId,
+                                  "timestamp"        => self::$timestamp,
+                                  "v"                => Config::VERSION,
+                                  'transaction_id'   => $transactionId,
+                                  'contract_id'      => $contractId,
+                                  'customer_id'      => $customerId,
+                                  'doc_title'        => $docTitle,
+                                  'position_type'    => $positionType,
+                                  'sign_keyword'     => $signKeyword,
+                                  'keyword_strategy' => $keywordStrategy,
+                                  'client_role'      => $clientRole,
+                                  'notify_url'       => $notifyUrl,
+                                  'msg_digest'       => $msg_digest
+                              ]
+                          ])->request();
             return [TRUE, $response];
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return [FALSE, $e->getMessage()];
         }
     }
@@ -445,8 +509,8 @@ class FddServer
             base64_encode(
                 strtoupper(
                     sha1(self::$appId .
-                        strtoupper(md5(self::$timestamp)) .
-                        strtoupper(sha1(self::$appSecret . $contractId))
+                         strtoupper(md5(self::$timestamp)) .
+                         strtoupper(sha1(self::$appSecret . $contractId))
                     )));
         try {
             $response = self::$request->scheme('https')
@@ -456,16 +520,16 @@ class FddServer
                 ->inputFormat('array')
                 ->outputFormat('json')
                 ->options([
-                    'query' => [
-                        "app_id"      => self::$appId,
-                        "timestamp"   => self::$timestamp,
-                        "v"           => Config::VERSION,
-                        'contract_id' => $contractId,
-                        'msg_digest'  => $msg_digest
-                    ]
-                ])->request();
+                              'query' => [
+                                  "app_id"      => self::$appId,
+                                  "timestamp"   => self::$timestamp,
+                                  "v"           => Config::VERSION,
+                                  'contract_id' => $contractId,
+                                  'msg_digest'  => $msg_digest
+                              ]
+                          ])->request();
             return [TRUE, $response];
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return [FALSE, $e->getMessage()];
         }
     }
@@ -482,8 +546,8 @@ class FddServer
             base64_encode(
                 strtoupper(
                     sha1(self::$appId .
-                        strtoupper(md5(self::$timestamp)) .
-                        strtoupper(sha1(self::$appSecret . $contractId . $customerId))
+                         strtoupper(md5(self::$timestamp)) .
+                         strtoupper(sha1(self::$appSecret . $contractId . $customerId))
                     )));
         try {
             $response = self::$request->scheme('https')
@@ -493,17 +557,17 @@ class FddServer
                 ->inputFormat('array')
                 ->outputFormat('json')
                 ->options([
-                    'query' => [
-                        "app_id"      => self::$appId,
-                        "timestamp"   => self::$timestamp,
-                        "v"           => Config::VERSION,
-                        'contract_id' => $contractId,
-                        'customer_id' => $customerId,
-                        'msg_digest'  => $msg_digest
-                    ]
-                ])->request();
+                              'query' => [
+                                  "app_id"      => self::$appId,
+                                  "timestamp"   => self::$timestamp,
+                                  "v"           => Config::VERSION,
+                                  'contract_id' => $contractId,
+                                  'customer_id' => $customerId,
+                                  'msg_digest'  => $msg_digest
+                              ]
+                          ])->request();
             return [TRUE, $response];
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return [FALSE, $e->getMessage()];
         }
     }

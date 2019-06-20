@@ -11,6 +11,7 @@ namespace georgeT\ElectronicContractFdd\Result;
 use \georgeT\ElectronicContractFdd\Traits\DataTransferTrait;
 use \georgeT\ElectronicContractFdd\Request\Request;
 use GuzzleHttp\Psr7\Response;
+use function strtoupper;
 
 class Result
 {
@@ -41,7 +42,7 @@ class Result
     public function __construct(Response $response, Request $request = NULL)
     {
         $this->statusCode = $response->getStatusCode();
-        $format           = ($request instanceof Request) ? \strtoupper($request->outputFormat) : 'XML';
+        $format           = ($request instanceof Request) ? strtoupper($request->outputFormat) : 'JSON';
         switch ($format) {
             case 'JSON':
                 $response = self::jsonToArray($response->getBody()->getContents());
