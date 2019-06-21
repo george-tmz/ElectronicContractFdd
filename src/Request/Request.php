@@ -27,6 +27,7 @@ use function strtoupper;
 /**
  * Class Request
  * @package georgeT\ElectronicContractFdd\Request
+ * @method string resolveParameters()
  */
 abstract class Request
 {
@@ -78,7 +79,6 @@ abstract class Request
      */
     public function __construct(array $options = [])
     {
-        //$this->client                 = $client;
         $this->uri                    = new Uri();
         $this->uri                    = $this->uri->withScheme($this->scheme);
         $this->guzzle                 = new Client();
@@ -214,8 +214,8 @@ abstract class Request
      */
     public function request()
     {
-//        echo $this->uri;die;
-        if (isset($this->options['form_params'])) {
+        $this->resolveParameters();
+        if ($this->method == 'GET' && isset($this->options['form_params'])) {
             $this->options['form_params'] = parse_query(
                 self::getPostHttpBody($this->options['form_params'])
             );
