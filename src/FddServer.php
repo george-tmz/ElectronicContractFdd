@@ -21,20 +21,20 @@ class FddServer
     /**
      * @var string
      */
-    public static $appId;
+    public $appId;
 
     /**
      * @var string
      */
-    public static $appSecret;
+    public $appSecret;
 
     /**
      * @var object
      */
 
-    public static $request;
+    public $request;
 
-    public static $timestamp;
+    public $timestamp;
 
     /**
      * FddServer constructor.
@@ -55,7 +55,7 @@ class FddServer
      * @param $key
      * @return array
      */
-    public static function encrypt($data, $key)
+    public function encrypt($data, $key)
     {
         return Crypt3Des::encrypt($data, $key);
     }
@@ -63,7 +63,7 @@ class FddServer
     /**
      * @return string
      */
-    public static function buildCode32(): string
+    public function buildCode32(): string
     {
         $str = date('YmdHis') . str_pad(substr(microtime(TRUE), 11, 4), 4, 0, STR_PAD_RIGHT);
         $str .= self::randomKeys(14);
@@ -78,7 +78,7 @@ class FddServer
      * @param $length
      * @return string
      */
-    public static function randomKeys($length): string
+    public function randomKeys($length): string
     {
         $output = '';
         for ($a = 0; $a < $length; $a++) {
@@ -93,7 +93,7 @@ class FddServer
      * @throws Exception
      * @annotation
      */
-    public static function buildMsgDigest(array $param)
+    public function buildMsgDigest(array $param)
     {
         if (empty($param)) {
             throw new Exception('无业务参数');
