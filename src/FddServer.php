@@ -44,10 +44,10 @@ class FddServer
      */
     public function __construct(string $appId, string $appSecret, array $options = [])
     {
-        self::$timestamp = date("YmdHis");
-        self::$appId     = $appId;
-        self::$appSecret = $appSecret;
-        self::$request   = new RpcRequest($options);
+        $this->timestamp = date("YmdHis");
+        $this->appId     = $appId;
+        $this->appSecret = $appSecret;
+        $this->request   = new RpcRequest($options);
     }
 
     /**
