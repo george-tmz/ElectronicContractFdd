@@ -102,9 +102,9 @@ class FddServer
         $strParam = implode('', $param);
         return base64_encode(
             strtoupper(sha1(
-                           self::$appId .
-                           strtoupper(md5(self::$timestamp)) .
-                           strtoupper(sha1(self::$appSecret . $strParam))
+                           $this->appId .
+                           strtoupper(md5($this->timestamp)) .
+                           strtoupper(sha1($this->appSecret . $strParam))
                        )));
     }
 }
