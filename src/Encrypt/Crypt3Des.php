@@ -8,6 +8,8 @@
 
 namespace georgeT\ElectronicContractFdd\Encrypt;
 
+use Exception;
+
 /**
  * Class Crypt3Des
  * @package georgeT\ElectronicContractFdd\Server
@@ -28,7 +30,7 @@ class Crypt3Des
     {
         try {
             if (!in_array(self::CIPHER, openssl_get_cipher_methods())) {
-                throw new \Exception('未知加密方法');
+                throw new Exception('未知加密方法');
             }
             $ivLen  = openssl_cipher_iv_length(self::CIPHER);
             if ($ivLen == 0) {
@@ -38,10 +40,10 @@ class Crypt3Des
             }
             $result = bin2hex(openssl_encrypt($data, self::CIPHER, $key, OPENSSL_RAW_DATA, $iv));
             if (!$result) {
-                throw new \Exception('加密失败');
+                throw new Exception('加密失败');
             }
             return [TRUE, $result];
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return [FALSE, $e->getMessage()];
         }
     }
