@@ -31,7 +31,11 @@ class Crypt3Des
                 throw new \Exception('未知加密方法');
             }
             $ivLen  = openssl_cipher_iv_length(self::CIPHER);
-            $iv     = openssl_random_pseudo_bytes($ivLen);
+            if ($ivLen == 0) {
+                $iv = '';
+            } else {
+                $iv = openssl_random_pseudo_bytes($ivLen);
+            }
             $result = bin2hex(openssl_encrypt($data, self::CIPHER, $key, OPENSSL_RAW_DATA, $iv));
             if (!$result) {
                 throw new \Exception('加密失败');
