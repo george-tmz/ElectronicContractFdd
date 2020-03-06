@@ -8,6 +8,7 @@
 
 namespace georgeT\ElectronicContractFdd\Request;
 
+use Exception;
 use georgeT\ElectronicContractFdd\Exception\ServerException;
 use georgeT\ElectronicContractFdd\Http\GuzzleTrait;
 use georgeT\ElectronicContractFdd\Result\Result;
@@ -79,9 +80,9 @@ abstract class Request
      */
     public function __construct(array $options = [])
     {
-        $this->uri                    = new Uri();
-        $this->uri                    = $this->uri->withScheme($this->scheme);
-        $this->guzzle                 = new Client();
+        $this->uri = new Uri();
+        $this->uri = $this->uri->withScheme($this->scheme);
+        $this->guzzle = new Client();
         $this->options['http_errors'] = FALSE;
 
         if ($options !== []) {
@@ -147,7 +148,7 @@ abstract class Request
     public function scheme(string $scheme)
     {
         $this->scheme = strtolower($scheme);
-        $this->uri    = $this->uri->withScheme($this->scheme);
+        $this->uri = $this->uri->withScheme($this->scheme);
 
         return $this;
     }
@@ -209,7 +210,7 @@ abstract class Request
     /**
      * @return Response
      * @throws ClientException
-     * @throws ServerException
+     * @throws Exception
      * @annotation
      */
     public function request()
@@ -223,7 +224,8 @@ abstract class Request
         $result = new Result($this->response(), $this);
 
         if (!$result->isSuccess()) {
-            throw new ServerException($result);
+            //throw new ServerException($result);
+            throw new Exception(var_export($result, true));
         }
         return $result->getResponse();
     }

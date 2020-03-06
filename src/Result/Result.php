@@ -44,14 +44,12 @@ class Result
         $this->statusCode = $response->getStatusCode();
         $format           = ($request instanceof Request) ? strtoupper($request->outputFormat) : 'JSON';
         switch ($format) {
+            case 'RAW':
             case 'JSON':
                 $response = self::jsonToArray($response->getBody()->getContents());
                 break;
             case 'XML':
                 $response = self::xmlToArray($response->getBody()->getContents());
-                break;
-            case 'RAW':
-                $response = self::jsonToArray($response->getBody()->getContents());
                 break;
             default:
                 $response = self::jsonToArray($response->getBody()->getContents());
