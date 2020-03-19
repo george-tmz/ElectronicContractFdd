@@ -9,7 +9,6 @@
 namespace georgeT\ElectronicContractFdd\Request;
 
 use Exception;
-use georgeT\ElectronicContractFdd\Exception\ServerException;
 use georgeT\ElectronicContractFdd\Http\GuzzleTrait;
 use georgeT\ElectronicContractFdd\Result\Result;
 use GuzzleHttp\Client;
