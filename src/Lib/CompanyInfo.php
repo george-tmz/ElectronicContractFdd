@@ -13,7 +13,7 @@ class CompanyInfo
     /**
      * @var string 企业名称
      */
-    protected $companyInfo = '';
+    protected $companyName = '';
 
     /**
      * @var string 统一社会信用代码
@@ -26,12 +26,12 @@ class CompanyInfo
     protected $creditImagePath = '';
 
     /**
-     * @param string $companyInfo
+     * @param string $companyName
      * @annotation
      */
-    public function setCompanyInfo(string $companyInfo)
+    public function setCompanyName(string $companyName)
     {
-        $this->companyInfo = $companyInfo;
+        $this->companyName = $companyName;
     }
 
     /**
