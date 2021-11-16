@@ -8,5 +8,5 @@ namespace georgeT\ElectronicContractFdd\Config;
  */
 class Config{
     const HOST = 'testapi.fadada.com:8443';
-    const VERSION = 2.0;
+    const VERSION = '2.0';
 }

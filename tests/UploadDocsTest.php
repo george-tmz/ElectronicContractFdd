@@ -15,49 +15,52 @@ class UploadDocsTest extends TestCase
     public function testUpload()
     {
         $fddServer = new FddServer(AppId, AppSecret);
-        $contractId = date('YmdHis');
-        $body = [
-            'contract_id' => $contractId,
-            'doc_title'   => 'wangmin test',
-            'doc_type'    => '.pdf',
-        ];
-        $msgDigest = $fddServer->buildMsgDigest($body);
-        $body['file'] = fopen('/tmp/277568.pdf', 'r');
-        $multipart = [
-            [
-                'name'     => 'app_id',
-                'contents' => $fddServer->appId
-            ],
-            [
-                'name'     => 'timestamp',
-                'contents' => $fddServer->timestamp
-            ],
-            [
-                'name'     => 'v',
-                'contents' => Config::VERSION,
-            ],
-            [
-                'name'     => 'msg_digest',
-                'contents' => $msgDigest
-            ],
-        ];
-        foreach ($body as $key => $item) {
-            $multipart[] = [
-                'name'     => $key,
-                'contents' => $item
-            ];
-        }
-        $res = $fddServer->request->scheme('http')
+        $contractId = date('Ymd001');
+        $msgDigest = $fddServer->buildMsgDigest([$contractId]);
+        $result = $fddServer->request->scheme('https')
             ->host(ApiAddr)
             ->path('/api/uploaddocs.api')
             ->method('POST')
             ->inputFormat('array')
             ->outputFormat('json')
             ->options([
-                'multipart' => $multipart
+                'multipart' => [
+                    [
+                        'name'     => 'app_id',
+                        'contents' => $fddServer->appId
+                    ],
+                    [
+                        'name'     => 'timestamp',
+                        'contents' => $fddServer->timestamp
+                    ],
+                    [
+                        'name'     => 'v',
+                        'contents' => Config::VERSION,
+                    ],
+                    [
+                        'name'     => 'msg_digest',
+                        'contents' => $msgDigest
+                    ],
+                    [
+                        'name'     => 'contract_id',
+                        'contents' => $contractId,
+                    ],
+                    [
+                        'name'     => 'doc_title',
+                        'contents' => 'wm劳动合同-test',
+                    ],
+                    [
+                        'name'     => 'file',
+                        'contents' => fopen('/tmp/277568.pdf', 'r'),
+                    ],
+                    [
+                        'name'     => 'doc_type',
+                        'contents' => '.pdf',
+                    ],
+                ]
             ])
             ->request();
-        var_dump($res);
-        die;
+        var_dump($result);
+        $this->assertEquals($result['result'], 'success');
     }
 }
