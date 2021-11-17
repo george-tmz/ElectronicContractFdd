@@ -51,7 +51,7 @@ class UploadDocsTest extends TestCase
                     ],
                     [
                         'name'     => 'file',
-                        'contents' => fopen('/tmp/277568.pdf', 'r'),
+                        'contents' => fopen('/tmp/fdd-2021-11-14.pdf', 'r'),
                     ],
                     [
                         'name'     => 'doc_type',
