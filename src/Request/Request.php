@@ -9,18 +9,15 @@
 namespace georgeT\ElectronicContractFdd\Request;
 
 use Exception;
-use georgeT\ElectronicContractFdd\Http\GuzzleTrait;
+use georgeT\ElectronicContractFdd\Http\CurlClient;
+use georgeT\ElectronicContractFdd\Http\CurlTrait;
+use georgeT\ElectronicContractFdd\Http\Response;
+use georgeT\ElectronicContractFdd\Http\Uri;
 use georgeT\ElectronicContractFdd\Result\Result;
-use GuzzleHttp\Client;
 use georgeT\ElectronicContractFdd\Exception\ClientException;
-use function GuzzleHttp\Psr7\parse_query;
-use GuzzleHttp\Psr7\Response;
-use GuzzleHttp\Psr7\Uri;
-use GuzzleHttp\Exception\GuzzleException;
 use function is_array;
 use function is_object;
 use function json_encode;
-use Psr\Http\Message\ResponseInterface;
 use function strtolower;
 use function strtoupper;
 
@@ -31,7 +28,7 @@ use function strtoupper;
  */
 abstract class Request
 {
-    use GuzzleTrait;
+    use CurlTrait;
 
     /**
      * @var string
@@ -64,9 +61,9 @@ abstract class Request
     public $uri;
 
     /**
-     * @var Client
+     * @var CurlClient
      */
-    public $guzzle;
+    public $curl;
 
     /**
      * @var array The original parameters of the request.
@@ -81,7 +78,7 @@ abstract class Request
     {
         $this->uri = new Uri();
         $this->uri = $this->uri->withScheme($this->scheme);
-        $this->guzzle = new Client();
+        $this->curl = new CurlClient();
         $this->options['http_errors'] = FALSE;
 
         if ($options !== []) {
@@ -207,7 +204,7 @@ abstract class Request
     }
 
     /**
-     * @return Response
+     * @return array
      * @throws ClientException
      * @throws Exception
      * @annotation
@@ -216,9 +213,11 @@ abstract class Request
     {
         $this->resolveParameters();
         if ($this->method == 'GET' && isset($this->options['form_params'])) {
-            $this->options['form_params'] = parse_query(
-                self::getPostHttpBody($this->options['form_params'])
+            parse_str(
+                self::getPostHttpBody($this->options['form_params']),
+                $parsed
             );
+            $this->options['form_params'] = $parsed;
         }
         $result = new Result($this->response(), $this);
 
@@ -244,19 +243,22 @@ abstract class Request
     }
 
     /**
-     * @return mixed|ResponseInterface
+     * @return Response
      * @throws ClientException
      */
     private function response()
     {
         try {
-            return $this->guzzle->request(
+            return $this->curl->request(
                 $this->method,
                 (string)$this->uri,
                 $this->options
             );
-        } catch (GuzzleException $e) {
-            throw new ClientException($e->getMessage(), 0, $e);
+        } catch (Exception $e) {
+            if ($e instanceof ClientException) {
+                throw $e;
+            }
+            throw new ClientException($e->getMessage(), $e->getCode(), $e);
         }
     }
 }

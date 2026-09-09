@@ -8,7 +8,7 @@
 
 namespace georgeT\ElectronicContractFdd\Http;
 
-trait GuzzleTrait
+trait CurlTrait
 {
     /**
      * @var array

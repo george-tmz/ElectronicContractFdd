@@ -51,10 +51,11 @@ trait DataTransferTrait
      */
     public static function jsonToArray(string $data): array
     {
-        try {
-            return \GuzzleHttp\json_decode($data, TRUE);
-        } catch (\InvalidArgumentException $e) {
+        $decoded = json_decode($data, TRUE);
+        if (json_last_error() !== JSON_ERROR_NONE || !is_array($decoded)) {
             return [];
         }
+
+        return $decoded;
     }
 }

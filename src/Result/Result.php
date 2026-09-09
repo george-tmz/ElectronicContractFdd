@@ -10,7 +10,7 @@ namespace georgeT\ElectronicContractFdd\Result;
 
 use \georgeT\ElectronicContractFdd\Traits\DataTransferTrait;
 use \georgeT\ElectronicContractFdd\Request\Request;
-use GuzzleHttp\Psr7\Response;
+use georgeT\ElectronicContractFdd\Http\Response;
 use function strtoupper;
 
 class Result
